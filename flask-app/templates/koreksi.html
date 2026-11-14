@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block body %}
+<h1>Request koreksi data terkunci</h1>
+<p class="note">Request dibuat dari halaman shift yang sudah terkunci (menu Verifikasi → Buka → Request koreksi). Hanya SPV yang bisa menyetujui.</p>
+{% for k in rows %}
+<h2>#{{ k.id }} · {{ k.tanggal }} {{ k.shift }} · {{ k.station }} — <span class="st st-{{ {'pending':'submitted','approved':'locked','rejected':'rejected'}[k.status] }}">{{ {'pending':'Menunggu SPV','approved':'Disetujui','rejected':'Ditolak'}[k.status] }}</span></h2>
+<p class="note">Diminta {{ k.peminta }} ({{ k.diminta_at }}) · Alasan: <b>{{ k.alasan }}</b>{% if k.pemutus %} · Diputus {{ k.pemutus }} ({{ k.diputus_at }}){% if k.catatan_spv %}: {{ k.catatan_spv }}{% endif %}{% endif %}</p>
+<table class="xl"><tr><th>Operator</th><th>Type</th><th>OK lama</th><th>OK baru</th><th>NG lama</th><th>NG baru</th></tr>
+{% for c in parse(k.perubahan) %}<tr><td>{{ names.get(c.op, c.op) }}</td><td class="c">{{ c.prod }}</td>
+<td class="r">{{ c.old_ok }}</td><td class="r" style="{{ 'background:#FFF2CC;font-weight:bold' if c.old_ok!=c.new_ok }}">{{ c.new_ok }}</td>
+<td class="r">{{ c.old_ng }}</td><td class="r" style="{{ 'background:#FFF2CC;font-weight:bold' if c.old_ng!=c.new_ng }}">{{ c.new_ng }}</td></tr>{% endfor %}</table>
+{% if k.status=='pending' and user.role in ('spv','admin') %}
+<div class="bar" style="margin-top:6px"><form method="post" action="{{ url_for('koreksi_action', kid=k.id, aksi='setujui') }}" style="display:flex;gap:6px">
+<input type="text" name="catatan" placeholder="Catatan (opsional)" style="width:240px"><button class="primary">Setujui &amp; terapkan</button></form>
+<form method="post" action="{{ url_for('koreksi_action', kid=k.id, aksi='tolak') }}" style="display:flex;gap:6px">
+<input type="text" name="catatan" placeholder="Alasan penolakan" style="width:240px"><button class="danger">Tolak</button></form></div>{% endif %}
+{% else %}<p>Belum ada request koreksi.</p>{% endfor %}
+{% endblock %}

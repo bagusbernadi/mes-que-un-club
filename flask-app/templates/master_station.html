@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block body %}
+<h1>Master station</h1>
+<p class="note">Urutan dipakai untuk urutan tampilan dan nanti untuk menghitung yield gabungan (Fase 1 → Encaps → Connector → Packing; FA1 terpisah).</p>
+{% set can = user.role in ('engineer','admin') %}
+<form method="post"><input type="hidden" name="aksi" value="urutan">
+<table class="xl"><tr><th>Urutan</th><th>Grup</th><th>Sub fase</th><th>Station</th><th>Operator default</th><th>Aktif</th></tr>
+{% for s in rows %}<tr style="{{ 'color:#7F7F7F;background:#F2F2F2' if not s.aktif }}">
+<td class="c">{% if can %}<input type="text" name="u_{{ s.id }}" value="{{ s.urutan }}" style="width:50px;text-align:center">{% else %}{{ s.urutan }}{% endif %}</td>
+<td class="c">{{ GRUP_LABEL[s.grup] }}</td><td>{{ s.sub_fase }}</td><td>{{ s.nama }}</td><td class="c">{{ s.n_op }}</td>
+<td class="c">{% if can %}<button form="t{{ s.id }}">{{ 'Ya' if s.aktif else 'Tidak' }}</button>{% else %}{{ 'Ya' if s.aktif else 'Tidak' }}{% endif %}</td></tr>{% endfor %}</table>
+{% if can %}<p><button class="primary">Simpan urutan</button></p>{% endif %}</form>
+{% for s in rows %}<form id="t{{ s.id }}" method="post"><input type="hidden" name="aksi" value="toggle"><input type="hidden" name="id" value="{{ s.id }}"></form>{% endfor %}
+{% if can %}<h2>Tambah station</h2><form method="post" class="bar"><input type="hidden" name="aksi" value="tambah">
+<select name="grup"><option value="F1">Fase 1</option><option value="F2">Fase 2</option><option value="FA1">FA1</option></select>
+<input type="text" name="sub_fase" placeholder="Sub fase (mis. Connector)"><input type="text" name="nama" placeholder="Nama station" style="width:260px" required>
+<button class="primary">Tambah</button></form>{% endif %}
+{% endblock %}

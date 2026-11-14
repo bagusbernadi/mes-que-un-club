@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block body %}
+<h1>User dan hak akses</h1>
+<table class="xl"><tr><th>Username</th><th>Nama</th><th>Peran</th><th>Grup</th><th>Aktif</th><th>Reset password</th></tr>
+{% for u in rows %}<tr style="{{ 'color:#7F7F7F' if not u.aktif }}"><td>{{ u.username }}</td><td>{{ u.nama }}</td><td>{{ ROLE_LABEL[u.role] }}</td><td class="c">{{ GRUP_LABEL.get(u.grup,'') }}</td>
+<td class="c"><form method="post"><input type="hidden" name="aksi" value="toggle"><input type="hidden" name="id" value="{{ u.id }}"><button>{{ 'Ya' if u.aktif else 'Tidak' }}</button></form></td>
+<td><form method="post" style="display:flex;gap:4px"><input type="hidden" name="aksi" value="reset"><input type="hidden" name="id" value="{{ u.id }}"><input type="text" name="password" placeholder="Password baru" required style="width:120px"><button>Reset</button></form></td></tr>{% endfor %}</table>
+<h2>Tambah user</h2>
+<form method="post" class="bar"><input type="hidden" name="aksi" value="tambah">
+<input type="text" name="username" placeholder="username" required><input type="text" name="nama" placeholder="Nama" required>
+<select name="role">{% for k,v in ROLE_LABEL.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select>
+<select name="grup"><option value="">Grup (khusus Asisten Leader)</option><option value="F1">Fase 1</option><option value="F2">Fase 2</option><option value="FA1">FA1</option></select>
+<input type="text" name="password" placeholder="Password awal" required><button class="primary">Tambah</button></form>
+{% endblock %}

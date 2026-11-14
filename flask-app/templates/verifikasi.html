@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block body %}
+<h1>Verifikasi shift</h1>
+<table class="xl">
+<tr><th>Tanggal</th><th>Shift</th><th>Grup</th><th>Status</th><th>OT</th><th>Diinput oleh</th><th>Submit</th><th>OK</th><th>NG</th><th>Yield</th><th>Batas kunci</th><th></th></tr>
+{% for r in rows %}<tr>
+<td class="c">{{ r.tanggal }}</td><td class="c">{{ r.shift }}</td><td class="c">{{ GRUP_LABEL[r.grup] }}</td>
+<td class="c"><span class="st st-{{ r.status }}">{{ STATUS_LABEL[r.status] }}{% if r.auto_locked %}*{% endif %}</span></td>
+<td class="c">{{ 'Ya' if r.overtime }}</td><td>{{ r.penginput or '-' }}</td><td class="c">{{ r.submitted_at or '' }}</td>
+<td class="r">{{ '{:,}'.format(r.ok or 0) }}</td><td class="r">{{ '{:,}'.format(r.ng or 0) }}</td>
+<td class="c">{% if (r.ok or 0)+(r.ng or 0) %}{{ '%.1f'|format(100*r.ok/(r.ok+r.ng)) }}%{% endif %}</td>
+<td class="c">{{ dl[r.id] }}</td><td><a class="btn" href="{{ url_for('shift_detail', sid=r.id) }}">Buka</a></td></tr>
+{% else %}<tr><td colspan="12" class="c">Belum ada data shift.</td></tr>{% endfor %}
+</table>
+<p class="note">* = terkunci otomatis tanpa verifikasi Leader.</p>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block body %}
+<h1>Audit log</h1><p class="note">Semua submit, verifikasi, kunci otomatis, koreksi, dan perubahan master data tercatat di sini dan tidak bisa dihapus dari aplikasi.</p>
+<table class="xl"><tr><th>Waktu</th><th>User</th><th>Aksi</th><th>Detail</th></tr>
+{% for a in rows %}<tr><td class="c">{{ a.waktu }}</td><td>{{ a.nama or 'Sistem' }}</td><td class="c">{{ a.aksi }}</td><td>{{ a.detail }}</td></tr>{% endfor %}</table>
+{% endblock %}

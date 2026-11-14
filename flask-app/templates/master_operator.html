@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block body %}
+<h1>Master operator</h1>
+{% if user.role in ('engineer','admin') %}<p><a class="btn" href="{{ url_for('master_operator_edit') }}">Tambah operator</a></p>{% endif %}
+<table class="xl"><tr><th>No.</th><th>ID 工号</th><th>Nama 姓名</th><th>Line</th><th>Station default</th><th>Grup</th><th>Tgl masuk</th><th>Kategori</th><th>Target /hari</th><th>Status</th>{% if user.role in ('engineer','admin') %}<th></th>{% endif %}</tr>
+{% for o in rows %}
+<tr style="{{ 'color:#7F7F7F;background:#F2F2F2' if o.status.startswith('Resign') }}"><td class="c">{{ loop.index }}</td><td class="c">{{ o.id }}</td><td>{{ o.nama }}</td><td class="c">{{ o.line or '' }}</td>
+<td>{{ o.station or (o.jabatan or '-') }}</td><td class="c">{{ GRUP_LABEL.get(o.grup,'') }}</td><td class="c">{{ o.tgl_masuk or '' }}</td>
+<td class="c"><span class="kat" data-tgl="{{ o.tgl_masuk or '' }}"></span></td>
+<td class="r">{{ o.target_per_hari or '' }}</td><td class="c">{{ o.status }}</td>
+{% if user.role in ('engineer','admin') %}<td><a class="btn" href="{{ url_for('master_operator_edit', id=o.id) }}">Edit</a></td>{% endif %}</tr>{% endfor %}</table>
+<p class="note">Kategori dihitung otomatis: Karyawan Baru = masa kerja kurang dari 3 bulan per hari ini.</p>
+<script>
+const t=new Date('{{ today.isoformat() }}');const lim=new Date(t);lim.setMonth(lim.getMonth()-3);
+document.querySelectorAll('.kat').forEach(s=>{if(!s.dataset.tgl)return;const baru=new Date(s.dataset.tgl)>lim;
+s.textContent=baru?'Karyawan Baru':'Karyawan Lama';s.className='st '+(baru?'st-draft':'st-submitted');});
+</script>
+{% endblock %}

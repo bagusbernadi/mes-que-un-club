@@ -1,0 +1,53 @@
+{% extends "base.html" %}{% block body %}
+{% if mode=='input' %}<h1>Input output harian per shift</h1>
+<form class="bar" method="get">
+<label>Tanggal</label><input type="date" name="tanggal" value="{{ tanggal }}" onchange="this.form.submit()">
+<label>Shift</label><select name="shift" onchange="this.form.submit()">{% for s in ('Pagi','Malam') %}<option {{ 'selected' if s==shift }}>{{ s }}</option>{% endfor %}</select>
+<input type="hidden" name="station" value="{{ station.id }}">
+<span class="st st-{{ sub.status if sub else 'none' }}">{{ STATUS_LABEL[sub.status if sub else None] }}</span>
+<span class="note">Batas kunci: {{ deadline }}</span>
+</form>
+{% if sub and sub.status=='rejected' and sub.catatan %}<div class="warn"><b>Ditolak Leader:</b> {{ sub.catatan }}</div>{% endif %}
+<div class="stlist">{% for s in stations %}<a href="{{ url_for('input_shift', tanggal=tanggal, shift=shift, station=s.id) }}"
+ class="{{ 'on' if s.id==station.id }} {{ 'done' if s.id in filled }}">{{ s.nama }}</a>{% endfor %}</div>
+{% elif mode=='koreksi' %}<h1>Request koreksi — {{ tanggal }} shift {{ shift }}</h1>
+<div class="warn">Ubah angka yang salah, isi alasan, lalu kirim. Perubahan baru berlaku setelah disetujui SPV dan tercatat di audit log.</div>
+{% else %}<h1>{{ tanggal }} shift {{ shift }} — {{ station.nama }}</h1>{% endif %}
+{% if not editable and mode=='input' %}<div class="warn">{{ why }}
+{% if user.role in ('leader','engineer','admin') %} <a class="btn" href="{{ url_for('koreksi_baru', tanggal=tanggal, shift=shift, station=station.id) }}">Buat request koreksi</a>{% endif %}</div>{% endif %}
+
+<form method="post" id="grid" autocomplete="off">
+<input type="hidden" name="tanggal" value="{{ tanggal }}"><input type="hidden" name="shift" value="{{ shift }}"><input type="hidden" name="station" value="{{ station.id }}">
+<table class="xl" id="tbl">
+<thead><tr><th>Station 工站</th><th>Name 姓名</th><th>ID 工号</th><th>Type 分类</th><th>OK</th><th>NG</th><th>Yield</th></tr></thead>
+<tbody id="body">
+{% set edit = editable and mode in ('input','koreksi') %}
+{% for o in ops %}{% for p in products %}{% set v = vals.get((o.id,p)) %}
+<tr class="{{ 'opstart' if loop.first }}" data-op="{{ o.id }}">
+{% if loop.first %}<td rowspan="{{ products|length }}">{{ station.nama }}</td><td rowspan="{{ products|length }}"><b>{{ o.nama }}</b></td><td rowspan="{{ products|length }}" class="c">{{ o.id }}</td>{% endif %}
+<td class="c">{{ p }}</td>
+{% if edit %}<td class="in"><input name="ok|{{ o.id }}|{{ p }}" value="{{ v.qty_ok if v else '' }}" inputmode="numeric"></td>
+<td class="in"><input name="ng|{{ o.id }}|{{ p }}" value="{{ v.qty_ng if v else '' }}" inputmode="numeric"></td>
+{% else %}<td class="ro">{{ v.qty_ok if v else '' }}</td><td class="ro">{{ v.qty_ng if v else '' }}</td>{% endif %}
+<td class="calc"></td></tr>{% endfor %}{% endfor %}
+</tbody>
+<tfoot><tr class="tot"><td colspan="4">Total station shift ini</td><td class="c" id="tok"></td><td class="c" id="tng"></td><td class="c" id="tyl"></td></tr></tfoot>
+</table>
+{% if not ops %}<p class="note">Belum ada operator untuk station ini. Tambahkan lewat pilihan di bawah.</p>{% endif %}
+{% if edit %}
+<div class="bar" style="margin-top:10px">
+<label>Tambah operator</label><select id="addop"><option value="">— pilih —</option>{% for o in all_ops %}<option value="{{ o.id }}">{{ o.nama }} ({{ o.id }})</option>{% endfor %}</select>
+<button type="button" onclick="addOp()">Tambah</button>
+{% if mode=='input' %}<label style="margin-left:12px"><input type="checkbox" name="overtime" {{ 'checked' if sub and sub.overtime }}> Overtime</label>{% endif %}
+<span style="flex:1"></span>
+{% if mode=='input' %}<button name="aksi" value="draft">Simpan draft</button>
+<button class="primary" name="aksi" value="submit" onclick="return confirm('Submit seluruh shift {{ shift }} {{ GRUP_LABEL[station.grup] }}? Setelah submit, data tidak bisa diubah Asisten Leader.')">Simpan &amp; submit shift</button>
+{% else %}<input type="text" name="alasan" placeholder="Alasan koreksi (wajib)" style="width:320px" required><button class="primary">Kirim request ke SPV</button>{% endif %}
+</div>
+<p class="note">Kuning = sel input. Enter = pindah ke bawah. Bisa paste blok angka OK/NG langsung dari Excel. Baris kosong tidak disimpan.</p>
+{% endif %}
+</form>
+{% if mode=='view' and sub %}<p><a class="btn" href="{{ url_for('shift_detail', sid=sub.id) }}">Kembali ke ringkasan shift</a></p>{% endif %}
+<template id="tpl">{% for p in products %}<tr class="{{ 'opstart' if loop.first }}" data-op="__ID__">{% if loop.first %}<td rowspan="{{ products|length }}">{{ station.nama }}</td><td rowspan="{{ products|length }}"><b>__NAMA__</b></td><td rowspan="{{ products|length }}" class="c">__ID__</td>{% endif %}<td class="c">{{ p }}</td><td class="in"><input name="ok|__ID__|{{ p }}" inputmode="numeric"></td><td class="in"><input name="ng|__ID__|{{ p }}" inputmode="numeric"></td><td class="calc"></td></tr>{% endfor %}</template>
+<script src="{{ url_for('static', filename='grid.js') }}"></script>
+{% endblock %}

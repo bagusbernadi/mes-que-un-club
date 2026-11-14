@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block body %}
+<h1>Status input per shift — 7 hari terakhir</h1>
+<table class="xl">
+<tr><th rowspan="2">Tanggal</th>{% for sh in ('Pagi','Malam') %}<th colspan="{{ grups|length }}">Shift {{ sh }}</th>{% endfor %}</tr>
+<tr>{% for sh in ('Pagi','Malam') %}{% for gr in grups %}<th class="sub">{{ GRUP_LABEL[gr] }}</th>{% endfor %}{% endfor %}</tr>
+{% for d in days %}<tr><td class="c"><b>{{ d }}</b></td>
+{% for sh in ('Pagi','Malam') %}{% for gr in grups %}{% set s = subs.get((d,sh,gr)) %}{% set t = totals.get((d,sh,gr)) %}
+<td class="c" style="min-width:120px">
+{% if s %}<a href="{{ url_for('shift_detail', sid=s.id) }}" class="st st-{{ s.status }}">{{ STATUS_LABEL[s.status] }}{% if s.auto_locked %}*{% endif %}</a>
+{% else %}<span class="st st-none">Belum input</span>{% endif %}
+{% if t and t.ok %}<div class="note">OK {{ '{:,}'.format(t.ok) }} · NG {{ '{:,}'.format(t.ng) }}</div>{% endif %}
+</td>{% endfor %}{% endfor %}</tr>{% endfor %}
+</table>
+<p class="note">* = terkunci otomatis karena belum diverifikasi Leader sampai batas waktu.
+Batas kunci = jam selesai shift + 2 jam (Pagi 19:00 / 22:00 bila overtime; Malam 07:00 / 10:00 keesokan hari bila overtime).</p>
+{% endblock %}

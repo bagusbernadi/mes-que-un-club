@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% block body %}
+<h1>{{ sub.tanggal }} — Shift {{ sub.shift }} — {{ GRUP_LABEL[sub.grup] }}</h1>
+<div class="bar"><span class="st st-{{ sub.status }}">{{ STATUS_LABEL[sub.status] }}{% if sub.auto_locked %} (otomatis, belum diverifikasi){% endif %}</span>
+<span class="note">Overtime: {{ 'Ya' if sub.overtime else 'Tidak' }} · Batas kunci: {{ deadline }}</span>
+{% if sub.catatan %}<span class="note">Catatan penolakan: {{ sub.catatan }}</span>{% endif %}</div>
+<table class="xl">
+<tr><th>Sub fase</th><th>Station</th><th>Jml operator</th><th>OK</th><th>NG</th><th>Yield</th><th></th>{% if sub.status=='locked' and user.role in ('leader','engineer','admin') %}<th></th>{% endif %}</tr>
+{% set ns = namespace(ok=0, ng=0) %}
+{% for s in per_station %}{% set ns.ok = ns.ok + s.ok %}{% set ns.ng = ns.ng + s.ng %}<tr>
+<td>{{ s.sub_fase }}</td><td>{{ s.nama }}</td><td class="c">{{ s.n_op }}</td><td class="r">{{ '{:,}'.format(s.ok) }}</td><td class="r">{{ '{:,}'.format(s.ng) }}</td>
+<td class="c">{% if s.ok+s.ng %}{{ '%.1f'|format(100*s.ok/(s.ok+s.ng)) }}%{% endif %}</td>
+<td><a class="btn" href="{{ url_for('shift_station', sid=sub.id, stid=s.id) }}">Lihat detail</a></td>
+{% if sub.status=='locked' and user.role in ('leader','engineer','admin') %}<td><a class="btn" href="{{ url_for('koreksi_baru', tanggal=sub.tanggal, shift=sub.shift, station=s.id) }}">Request koreksi</a></td>{% endif %}
+</tr>{% else %}<tr><td colspan="7" class="c">Belum ada data.</td></tr>{% endfor %}
+<tr class="tot"><td colspan="3">Total</td><td class="r">{{ '{:,}'.format(ns.ok) }}</td><td class="r">{{ '{:,}'.format(ns.ng) }}</td>
+<td class="c">{% if ns.ok+ns.ng %}{{ '%.1f'|format(100*ns.ok/(ns.ok+ns.ng)) }}%{% endif %}</td><td colspan="2"></td></tr>
+</table>
+{% if sub.status=='submitted' and user.role in ('leader','spv','admin') %}
+<div class="bar" style="margin-top:12px">
+<form method="post" action="{{ url_for('shift_action', sid=sub.id, aksi='setujui') }}"><button class="primary">Setujui &amp; kunci</button></form>
+<form method="post" action="{{ url_for('shift_action', sid=sub.id, aksi='tolak') }}" style="display:flex;gap:6px">
+<input type="text" name="catatan" placeholder="Alasan penolakan" style="width:300px"><button class="danger">Tolak, kembalikan ke Asisten Leader</button></form></div>
+{% endif %}
+{% if koreksi %}<h2>Riwayat koreksi</h2><table class="xl"><tr><th>#</th><th>Station</th><th>Peminta</th><th>Waktu</th><th>Alasan</th><th>Status</th></tr>
+{% for k in koreksi %}<tr><td class="c">{{ k.id }}</td><td>{{ k.station }}</td><td>{{ k.peminta }}</td><td>{{ k.diminta_at }}</td><td>{{ k.alasan }}</td><td class="c">{{ {'pending':'Menunggu SPV','approved':'Disetujui','rejected':'Ditolak'}[k.status] }}</td></tr>{% endfor %}</table>{% endif %}
+{% endblock %}

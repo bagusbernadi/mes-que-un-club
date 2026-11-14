@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block body %}
+<h1>{{ 'Edit' if op else 'Tambah' }} operator</h1>
+<form method="post" class="form-grid">
+<label>ID 工号</label><input type="text" name="id_baru" value="{{ op.id if op else '' }}" {{ 'readonly' if op }} required>
+<label>Nama</label><input type="text" name="nama" value="{{ op.nama if op else '' }}" required>
+<label>Line</label><input type="text" name="line" value="{{ op.line or '' if op else '' }}" placeholder="P1">
+<label>Jabatan</label><input type="text" name="jabatan" value="{{ op.jabatan or '' if op else '' }}">
+<label>Station default</label><select name="station_id"><option value="">— bukan operator produksi —</option>
+{% for s in stations %}<option value="{{ s.id }}" {{ 'selected' if op and op.station_id==s.id }}>{{ GRUP_LABEL[s.grup] }} · {{ s.nama }}</option>{% endfor %}</select>
+<label>Tanggal masuk</label><input type="date" name="tgl_masuk" value="{{ op.tgl_masuk or '' if op else '' }}">
+<label>Target /hari</label><input type="number" name="target" value="{{ op.target_per_hari or '' if op else '' }}">
+<label>Status</label><select name="status">{% for s in ('Aktif','Resign 离职') %}<option {{ 'selected' if op and op.status==s }}>{{ s }}</option>{% endfor %}</select>
+<span></span><div><button class="primary">Simpan</button> <a class="btn" href="{{ url_for('master_operator') }}">Batal</a></div>
+</form>{% endblock %}

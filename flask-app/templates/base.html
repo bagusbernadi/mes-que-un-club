@@ -1,0 +1,21 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}MES PLC Splitter{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head><body>
+{% if user %}
+<nav class="top"><span class="brand">MES PLC Splitter</span>
+{% set ep = request.endpoint %}
+<a href="{{ url_for('home') }}" class="{{ 'on' if ep=='home' }}">Status shift</a>
+{% if user.role in ('asisten_leader','leader','admin') %}<a href="{{ url_for('input_shift') }}" class="{{ 'on' if ep=='input_shift' }}">Input output</a>{% endif %}
+{% if user.role in ('leader','spv','admin','engineer') %}<a href="{{ url_for('verifikasi') }}" class="{{ 'on' if ep=='verifikasi' }}">Verifikasi</a>
+<a href="{{ url_for('koreksi_list') }}" class="{{ 'on' if ep=='koreksi_list' }}">Koreksi{% if pending_koreksi %}<span class="badge">{{ pending_koreksi }}</span>{% endif %}</a>
+<a href="{{ url_for('master_operator') }}" class="{{ 'on' if ep and ep.startswith('master_operator') }}">Operator</a>
+<a href="{{ url_for('master_station') }}" class="{{ 'on' if ep=='master_station' }}">Station</a>{% endif %}
+{% if user.role in ('spv','engineer','admin') %}<a href="{{ url_for('audit_view') }}" class="{{ 'on' if ep=='audit_view' }}">Audit log</a>{% endif %}
+{% if user.role=='admin' %}<a href="{{ url_for('users') }}" class="{{ 'on' if ep=='users' }}">User</a>{% endif %}
+<span class="sp"></span><span class="who">{{ user.nama }}</span>
+<a href="{{ url_for('change_password') }}">Password</a><a href="{{ url_for('logout') }}">Keluar</a></nav>
+{% endif %}
+<main>
+{% for cat,msg in get_flashed_messages(with_categories=true) %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+{% block body %}{% endblock %}
+</main></body></html>
